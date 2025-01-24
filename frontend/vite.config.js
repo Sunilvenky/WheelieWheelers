@@ -11,5 +11,11 @@ export default defineConfig({
         changeOrigin: true
       }
     }
+  },
+  build: {
+    outDir: 'dist',
+    rollupOptions: {
+      input: 'frontend/src/main.jsx'
+    }
   }
 })
