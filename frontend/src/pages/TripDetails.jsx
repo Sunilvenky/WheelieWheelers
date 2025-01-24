@@ -1,93 +1,78 @@
-import { useState } from 'react'
-import { useParams } from 'react-router-dom'
-import './TripDetails.css'
-
-// Mock data - replace with API call
-const tripData = {
-  id: 1,
-  name: 'Leh-Ladakh Classic',
-  images: [
-    '/images/trip1-1.jpg',
-    '/images/trip1-2.jpg',
-    '/images/trip1-3.jpg'
-  ],
-  description: 'Experience the ultimate adventure through the majestic landscapes of Ladakh...',
-  itinerary: [
-    'Day 1: Arrival in Leh',
-    'Day 2: Acclimatization & Local Sightseeing',
-    'Day 3: Leh to Nubra Valley',
-    // ... more days
-  ],
-  inclusions: [
-    'Accommodation',
-    'Meals',
-    'Bike Rental',
-    // ... more
-  ],
-  exclusions: [
-    'Personal Expenses',
-    'Travel Insurance',
-    // ... more
-  ],
-  pickup: 'Leh Airport',
-  drop: 'Leh Airport',
-  startDate: '2023-10-15',
-  thingsToCarry: [
-    'Warm Clothes',
-    'Sunscreen',
-    'Medications',
-    // ... more
-  ]
-}
+import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import './TripDetails.css';
+import axios from 'axios';
 
 export default function TripDetails() {
-  const { id } = useParams()
-  const [currentImage, setCurrentImage] = useState(0)
-  const [activeTab, setActiveTab] = useState('overview')
+  const { id } = useParams();
+  const [currentImage, setCurrentImage] = useState(0);
+  const [activeTab, setActiveTab] = useState('overview');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     participants: 1,
     requests: ''
-  })
-  const [errors, setErrors] = useState({})
+  });
+  const [errors, setErrors] = useState({});
+  const [tripData, setTripData] = useState(null);
+
+  useEffect(() => {
+    const fetchTrip = async () => {
+      try {
+        const response = await axios.get(`/.netlify/functions/trip?id=${id}`);
+        setTripData(response.data.trips[0]);
+      } catch (error) {
+        console.error('Error fetching trip data:', error);
+      }
+    };
+
+    fetchTrip();
+  }, [id]);
 
   const handleImageChange = (index) => {
-    setCurrentImage(index)
-  }
+    setCurrentImage(index);
+  };
 
   const handleTabChange = (tab) => {
-    setActiveTab(tab)
-  }
+    setActiveTab(tab);
+  };
 
   const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData({ ...formData, [name]: value })
-  }
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
 
   const validateForm = () => {
-    const newErrors = {}
-    if (!formData.name) newErrors.name = 'Name is required'
+    const newErrors = {};
+    if (!formData.name) newErrors.name = 'Name is required';
     if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Valid email is required'
+      newErrors.email = 'Valid email is required';
     }
     if (!formData.phone || !/^\d{10}$/.test(formData.phone)) {
-      newErrors.phone = 'Valid phone number is required'
+      newErrors.phone = 'Valid phone number is required';
     }
     if (formData.participants < 1) {
-      newErrors.participants = 'At least 1 participant is required'
+      newErrors.participants = 'At least 1 participant is required';
     }
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     if (validateForm()) {
-      // Handle form submission
-      console.log('Form submitted:', formData)
+      try {
+        const response = await axios.post('/.netlify/functions/trip', formData);
+        console.log('Form submitted:', response.data);
+      } catch (error) {
+        console.error('Error submitting form:', error);
+      }
     }
+  };
+
+  if (!tripData) {
+    return <div>Loading...</div>;
   }
 
   return (
@@ -255,5 +240,5 @@ export default function TripDetails() {
         </div>
       </div>
     </div>
-  )
+  );
 }
